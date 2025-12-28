@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>PressC Music</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-color: #000000;
+            --card-bg: #111111;
+            --text-primary: #ffffff;
+            --text-secondary: #888888;
+            --accent-glow: rgba(255, 255, 255, 0.1);
+            --nav-bg: rgba(20, 20, 20, 0.85);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            padding-bottom: 100px; /* Отступ под нижнее меню */
+            overflow-x: hidden;
+        }
+
+        /* --- Анимации --- */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes scaleIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        /* --- Хедер --- */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 16px;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logo span {
+            background: linear-gradient(45deg, #fff, #888);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--card-bg);
+            padding: 4px 12px 4px 4px;
+            border-radius: 50px;
+            border: 1px solid #222;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+            background-color: #333;
+        }
+
+        .user-name {
+            font-size: 13px;
+            font-weight: 600;
+            max-width: 100px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* --- Поиск --- */
+        .search-container {
+            padding: 0 16px;
+            margin-bottom: 24px;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .search-bar {
+            width: 100%;
+            background-color: var(--card-bg);
+            border: 1px solid #222;
+            border-radius: 16px;
+            padding: 14px 16px;
+            color: white;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .search-bar:focus {
+            border-color: #444;
+            box-shadow: 0 0 15px rgba(255,255,255,0.05);
+        }
+
+        .search-bar::placeholder {
+            color: #555;
+        }
+
+        /* --- Секции --- */
+        .section-title {
+            padding: 0 16px;
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            animation: fadeIn 0.7s ease-out;
+        }
+
+        .track-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 0 16px;
+        }
+
+        /* --- Карточка трека --- */
+        .track-card {
+            display: flex;
+            align-items: center;
+            background-color: var(--card-bg);
+            padding: 12px;
+            border-radius: 20px;
+            gap: 16px;
+            transition: transform 0.2s, background-color 0.2s;
+            animation: scaleIn 0.5s ease-out;
+            animation-fill-mode: both;
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+
+        /* Задержка анимации для списка */
+        .track-card:nth-child(1) { animation-delay: 0.1s; }
+        .track-card:nth-child(2) { animation-delay: 0.2s; }
+        .track-card:nth-child(3) { animation-delay: 0.3s; }
+        .track-card:nth-child(4) { animation-delay: 0.4s; }
+
+        .track-card:active {
+            transform: scale(0.96);
+            background-color: #1a1a1a;
+        }
+
+        .track-cover {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            object-fit: cover;
+            background: #333;
+        }
+
+        .track-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .track-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .track-artist {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .track-playing-icon {
+            opacity: 0;
+            color: #fff;
+            transition: opacity 0.3s;
+        }
+
+        /* --- Нижнее Меню --- */
+        .bottom-nav {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 64px;
+            background: var(--nav-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 32px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            z-index: 100;
+            animation: fadeIn 1s ease-out;
+        }
+
+        .nav-item {
+            color: #666;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .nav-item.active {
+            color: #fff;
+            background: rgba(255,255,255,0.1);
+        }
+
+        .nav-item .material-icons-round {
+            font-size: 28px;
+        }
+
+        /* Анимация нажатия на навигацию */
+        .nav-item:active {
+            transform: scale(0.9);
+        }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">
+            <span class="material-icons-round">graphic_eq</span>
+            <span>PressC</span>
+        </div>
+        <div class="user-profile" id="userProfile">
+            <img src="https://via.placeholder.com/100/333333/ffffff?text=U" alt="User" class="user-avatar" id="userAvatar">
+            <span class="user-name" id="userName">Guest</span>
+        </div>
+    </header>
+
+    <div class="search-container">
+        <input type="text" class="search-bar" placeholder="Find artist, tracks...">
+    </div>
+
+    <h2 class="section-title">Top Tiers</h2>
+    
+    <div class="track-list">
+        <div class="track-card">
+            <img src="https://picsum.photos/100/100?random=1" alt="Cover" class="track-cover">
+            <div class="track-info">
+                <div class="track-title">Midnight City</div>
+                <div class="track-artist">M83</div>
+            </div>
+        </div>
+
+        <div class="track-card">
+            <img src="https://picsum.photos/100/100?random=2" alt="Cover" class="track-cover">
+            <div class="track-info">
+                <div class="track-title">Starboy</div>
+                <div class="track-artist">The Weeknd</div>
+            </div>
+        </div>
+
+        <div class="track-card">
+            <img src="https://picsum.photos/100/100?random=3" alt="Cover" class="track-cover">
+            <div class="track-info">
+                <div class="track-title">Nightcall</div>
+                <div class="track-artist">Kavinsky</div>
+            </div>
+        </div>
+        
+        <div class="track-card">
+            <img src="https://picsum.photos/100/100?random=4" alt="Cover" class="track-cover">
+            <div class="track-info">
+                <div class="track-title">After Hours</div>
+                <div class="track-artist">The Weeknd</div>
+            </div>
+        </div>
+    </div>
+
+    <nav class="bottom-nav">
+        <div class="nav-item active" onclick="selectTab(this)">
+            <span class="material-icons-round">home</span>
+        </div>
+        <div class="nav-item" onclick="selectTab(this)">
+            <span class="material-icons-round">favorite</span>
+        </div>
+    </nav>
+
+    <script>
+        // Инициализация Telegram Web App
+        const tg = window.Telegram.WebApp;
+
+        // Сообщаем Телеграму, что приложение готово
+        tg.ready();
+        
+        // Разворачиваем на весь экран
+        tg.expand(); 
+        
+        // Настраиваем цвета темы под параметры Телеграма (если нужно системное поведение)
+        // tg.setHeaderColor('#000000'); // Пример установки цвета хедера
+
+        // --- Логика получения данных пользователя ---
+        function initUserProfile() {
+            const user = tg.initDataUnsafe.user;
+            const nameEl = document.getElementById('userName');
+            const avatarEl = document.getElementById('userAvatar');
+
+            if (user) {
+                // Устанавливаем имя (или username, если имени нет)
+                nameEl.innerText = user.first_name || user.username || "User";
+
+                // Устанавливаем аватарку, если она есть
+                if (user.photo_url) {
+                    avatarEl.src = user.photo_url;
+                } else {
+                    // Генерируем заглушку с первой буквой имени
+                    const initial = (user.first_name ? user.first_name[0] : 'U').toUpperCase();
+                    avatarEl.src = `https://via.placeholder.com/100/333333/ffffff?text=${initial}`;
+                }
+            } else {
+                // Если открыто не в Telegram, оставляем заглушку
+                console.log("Приложение открыто не через Telegram (нет данных пользователя)");
+            }
+        }
+
+        // --- Логика переключения табов (визуальная) ---
+        function selectTab(element) {
+            // Убираем класс active у всех
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            // Добавляем нажатому
+            element.classList.add('active');
+            
+            // Здесь можно добавить тактильный отклик (вибрацию)
+            if(tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('light');
+            }
+        }
+
+        // Запуск
+        initUserProfile();
+
+    </script>
+</body>
+</html>
